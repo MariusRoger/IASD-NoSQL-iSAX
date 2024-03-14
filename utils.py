@@ -2,7 +2,12 @@ from math import sqrt
 
 from usual_values import return_breakpoints
 
-def mindist_paa_isax(T_paa: list[int], S_isax: list[tuple[int,int]], n:int) -> float:
+#  type aliases
+iSAX_symbol = tuple[int,int]
+iSAX_word = list[iSAX_symbol]
+PAA_word = list[int]
+
+def mindist_paa_isax(T_paa: PAA_word, S_isax: iSAX_word, n:int) -> float:
     if len(T_paa) != len(S_isax):
         raise ValueError("T_paa and S_isax must have the same length")
     
@@ -28,3 +33,42 @@ def mindist_paa_isax(T_paa: list[int], S_isax: list[tuple[int,int]], n:int) -> f
 
         accumulator += d*d
     return sqrt(accumulator * n / len(T_paa))
+
+
+def promote_repr_symbol(T_i:iSAX_symbol, S_i:iSAX_symbol) -> tuple[iSAX_symbol, iSAX_symbol]:
+    if T_i[1] > S_i[1]:
+        a_symbol, a_card = T_i
+        b_symbol, b_card = S_i
+    elif S_i[1] > T_i[1]:
+        a_symbol, a_card = S_i
+        b_symbol, b_card = T_i
+    else:
+        return T_i, S_i
+    
+    A = (a_symbol, a_card)
+    diff_card = a_card - b_card
+    prefix = a_symbol >> diff_card
+
+    if b_symbol == prefix:
+        return (A, A)
+    
+    elif b_symbol < prefix:
+        B = (((b_symbol +1) << diff_card) - 1, a_card)
+        # bit shift and add ones at the end
+        return (A, B) if T_i[1] > S_i[1] else (B,A)
+    
+    else:
+        B = (b_symbol << diff_card, a_card)
+        return (A, B) if T_i[1] > S_i[1] else (B,A)
+
+
+def promote_repr_word(T:iSAX_word, S:iSAX_word) -> tuple[iSAX_word, iSAX_word]:
+    if len(T) != len(S):
+        raise ValueError("T and S must have the same length")
+    
+    n = len(T)
+    T_out, S_out = [None]*n, [None]*n
+
+    for index, T_i_S_i in enumerate(zip(T, S)):
+        T_out[index], S_out[index] = promote_repr_symbol(*T_i_S_i)    
+    return (T_out, S_out)
