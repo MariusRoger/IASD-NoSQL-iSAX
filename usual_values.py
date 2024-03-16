@@ -19,7 +19,6 @@ assert normal_CDF is not None
 
 breakpoints = dict()
 
-
 def compute_breakpoints(cardinality:int) -> None:
     if cardinality > 500 or cardinality <= 1:
         raise ValueError("cardinality must be between 2 and 500 included")
@@ -35,3 +34,11 @@ def return_breakpoints(cardinality:int) -> list[int]:
     if cardinality not in breakpoints:
         compute_breakpoints(cardinality)
     return breakpoints[cardinality]
+
+# in practice we will only use cardinalities powers of 2 for easy bit-shifting
+def n_bits_to_cardinality(n_bits:int) -> int:
+    return 1 << (n_bits - 1)
+    # the power of 2 is 1 less than the number of bits
+
+def return_breakpoints_n_bits(n_bits:int) -> list[int]:
+    return_breakpoints(n_bits_to_cardinality(n_bits))

@@ -1,11 +1,11 @@
 from math import sqrt
 
-from usual_values import return_breakpoints
+from usual_values import return_breakpoints_n_bits, n_bits_to_cardinality
 
 #  type aliases
 iSAX_symbol = tuple[int,int]
 iSAX_word = list[iSAX_symbol]
-PAA_word = list[int]
+PAA_word = list[float]
 
 def mindist_paa_isax(T_paa: PAA_word, S_isax: iSAX_word, n:int) -> float:
     if len(T_paa) != len(S_isax):
@@ -13,9 +13,9 @@ def mindist_paa_isax(T_paa: PAA_word, S_isax: iSAX_word, n:int) -> float:
     
     accumulator = 0
     for T_i, S_i in zip(T_paa, S_isax):
-        symbol, cardinality = S_i
-        betas = return_breakpoints(cardinality)
-        if 0 < symbol < cardinality-1:
+        symbol, n_bits = S_i
+        betas = return_breakpoints_n_bits(n_bits)
+        if 0 < symbol < n_bits_to_cardinality(n_bits)-1:
             beta_l, beta_u = betas[symbol-1:symbol+1]
             # I decided to use the reverse paradigm compared to the paper :
             # lower symbol values for lower values
@@ -51,15 +51,13 @@ def promote_repr_symbol(T_i:iSAX_symbol, S_i:iSAX_symbol) -> tuple[iSAX_symbol, 
 
     if b_symbol == prefix:
         return (A, A)
-    
     elif b_symbol < prefix:
         B = (((b_symbol +1) << diff_card) - 1, a_card)
-        # bit shift and add ones at the end
-        return (A, B) if T_i[1] > S_i[1] else (B,A)
-    
+        # bit shift and add ones at the end    
     else:
         B = (b_symbol << diff_card, a_card)
-        return (A, B) if T_i[1] > S_i[1] else (B,A)
+
+    return (A, B) if T_i[1] > S_i[1] else (B,A)
 
 
 def promote_repr_word(T:iSAX_word, S:iSAX_word) -> tuple[iSAX_word, iSAX_word]:
