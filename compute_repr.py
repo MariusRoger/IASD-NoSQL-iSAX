@@ -6,7 +6,7 @@ def compute_isax(T, w:int, n_bits_list:list[int], epsilon:float, existing_iSAX:i
         - a list of cardinalities represented by their number of bits (second field of an iSAX symbol)
         - epsilon : threshold to limit normalization of noise
         - a prior on the iSAX representation, when we just need to update some of the values
-        if used, this prior fills  can be used 
+        if used, only dimensions with a n_bits in n_bits_list negative or different from existing_iSAX are recomputed 
     """
     assert len(n_bits_list) == w
     prev_iSAX_exists = existing_iSAX is not None
