@@ -1,4 +1,6 @@
-from math import sqrt
+from math import sqrt, ceil
+from numpy import array, array_split, zeros_like
+from bisect import bisect_left
 
 from usual_values import return_breakpoints_n_bits, n_bits_to_cardinality
 
@@ -7,9 +9,54 @@ iSAX_symbol = tuple[int,int]
 iSAX_word = list[iSAX_symbol]
 PAA_word = list[float]
 
+def normalize_ts(T, epsilon:float = 0):
+    # I need to understand how to properly hint ndarray types
+    """
+        T : ndarray[float]
+        epsilon : float
+
+        return : ndarray[float]
+
+        computes (T - mean) / std with a safeguard :
+        if the std of T is too small, a zero array is returned
+    """    
+    T_std = T.std()
+    if T_std <= epsilon:
+        return zeros_like(T)
+
+    return (T - T.mean())/T_std
+
+
+def rescale_normalize_ts(T, T_len:int, w:int, epsilon:float):
+    """
+        Computes (T - mean) / std with safeguards :
+        - if the length of T is smaller than w, a "time stretch" is performed
+        - if the std of T is too small, a zero array is returned
+    """
+    if T_len < w:
+        T_rescaled = T.repeat(ceil(w/T_len))
+        # implicit time stretch of data for it to be longer than the iSAX word length
+        return normalize_ts(T_rescaled, epsilon)
+    else:
+        return normalize_ts(T, epsilon)
+
+
+def compute_paa(blocks:list) -> float:
+    """Average each block in the list of blocks"""
+    return [block.mean() for block in blocks]
+
+
+def paa_to_isax(T_paa:PAA_word, n_bits_list:list[int]) -> iSAX_word:
+    if len(T_paa) != len(n_bits_list):
+        raise IndexError(f"Length of T_paa ({len(T_paa)}) must be equal to length of n_bits_list ({len(n_bits_list)}).")
+    
+    return [(bisect_left(return_breakpoints_n_bits(n_bits), T_i), n_bits) for T_i, n_bits in zip(T_paa, n_bits_list)]
+
+
 def mindist_paa_isax(T_paa: PAA_word, S_isax: iSAX_word, n:int) -> float:
+    """Compute the function mindist_paa_isax (see iSAX paper) between T_paa and S_isax"""
     if len(T_paa) != len(S_isax):
-        raise ValueError("T_paa and S_isax must have the same length")
+        raise IndexError(f"Length of T_paa ({len(T_paa)}) must be equal to length of S_isax ({len(S_isax)}).")
     
     accumulator = 0
     for T_i, S_i in zip(T_paa, S_isax):
@@ -36,6 +83,10 @@ def mindist_paa_isax(T_paa: PAA_word, S_isax: iSAX_word, n:int) -> float:
 
 
 def promote_repr_symbol(T_i:iSAX_symbol, S_i:iSAX_symbol) -> tuple[iSAX_symbol, iSAX_symbol]:
+    """
+        Promotes the smaller-cardinality i-th symbol to the cardinality of the other
+        between iSAX representations T and S, according to the algorithm in the iSAX paper
+    """
     if T_i[1] > S_i[1]:
         a_symbol, a_card = T_i
         b_symbol, b_card = S_i
@@ -61,8 +112,12 @@ def promote_repr_symbol(T_i:iSAX_symbol, S_i:iSAX_symbol) -> tuple[iSAX_symbol, 
 
 
 def promote_repr_word(T:iSAX_word, S:iSAX_word) -> tuple[iSAX_word, iSAX_word]:
+    """
+        Promotes per-dimension the smaller-cardinality symbol to the cardinality of the corresponding symbol
+        in the other iSAX representation, between T and S, according to the algorithm in the iSAX paper
+    """
     if len(T) != len(S):
-        raise ValueError("T and S must have the same length")
+        raise ValueError(f"Length of T ({len(T)}) must be equal to length of S ({len(S)}).")
     
     n = len(T)
     T_out, S_out = [None]*n, [None]*n

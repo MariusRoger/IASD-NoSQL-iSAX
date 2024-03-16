@@ -21,7 +21,7 @@ breakpoints = dict()
 
 def compute_breakpoints(cardinality:int) -> None:
     if cardinality > 500 or cardinality <= 1:
-        raise ValueError("cardinality must be between 2 and 500 included")
+        raise ValueError(f"cardinality ({cardinality}) is not between 2 and 500 included")
 
     indices = array(normal_CDF.searchsorted(arange(1, cardinality) / cardinality))
     # computing the "indices" of the beta_1 to beta_{cardinality-1} from the paper
@@ -37,8 +37,8 @@ def return_breakpoints(cardinality:int) -> list[int]:
 
 # in practice we will only use cardinalities powers of 2 for easy bit-shifting
 def n_bits_to_cardinality(n_bits:int) -> int:
-    return 1 << (n_bits - 1)
+    return 1 << n_bits
     # the power of 2 is 1 less than the number of bits
 
 def return_breakpoints_n_bits(n_bits:int) -> list[int]:
-    return_breakpoints(n_bits_to_cardinality(n_bits))
+    return return_breakpoints(n_bits_to_cardinality(n_bits))
