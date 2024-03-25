@@ -1,5 +1,15 @@
 from utils import *
 
+
+def compute_isax_simple(T, w:int, n_bits:int, epsilon:float) -> iSAX_word:
+    """
+        Computes the iSAX representation of a time series T and S, parameterized by :
+        - the length of the representation
+        - a cardinality represented by their number of bits (second field of an iSAX symbol)
+        - epsilon : threshold to limit normalization of noise
+    """
+    return compute_isax(T, w, [n_bits]*w, epsilon)
+
 def compute_isax(T, w:int, n_bits_list:list[int], epsilon:float, existing_iSAX:iSAX_word = None) -> iSAX_word:
     """
         Computes the iSAX representation of a time series T and S, parameterized by :

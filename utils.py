@@ -125,3 +125,28 @@ def promote_repr_word(T:iSAX_word, S:iSAX_word) -> tuple[iSAX_word, iSAX_word]:
     for index, T_i_S_i in enumerate(zip(T, S)):
         T_out[index], S_out[index] = promote_repr_symbol(*T_i_S_i)    
     return (T_out, S_out)
+
+
+def downgrade_repr_word_to_one(T:iSAX_word) -> iSAX_word:
+    """
+        Downgrades per-dimension the high-cardinality symbols to cardinality 1.
+        This is useful for lazy creation of the root nodes.
+    """
+    return [(letter[0] >> (letter[1] - 1), 1) for letter in T]
+
+
+def increase_dim_split_isax(T:iSAX_word, split_dim:int, child:int):
+    S = T.copy()
+    S[split_dim] = ((T[split_dim][0] << 1)+child, T[split_dim][1]+1)
+    return S
+
+
+def isax_to_string(T:iSAX_word) -> str:
+    return '_'.join([f'{symbol}.{card}' for symbol, card in T])
+
+def string_to_isax(s:str) -> iSAX_word:
+    return [tuple(int(x) for x in T_i.split('.')) for T_i in s.split('_')]
+
+
+def compute_binary_possible_vectors(n:int) -> list[list[bool]]:
+    return [[ (i % (2 << power)) >= (1 << power) for power in range(n)] for i in range(1 << n)]
